@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dilmuss — Savdo dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="dilmuss.css">
+  <script src="app.js"></script>
+  <script>if (!Auth.isLoggedIn()) location.replace("index.html");</script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <a href="#umumiy" class="logo side-logo"><img class="brand-logo" src="logo.png" alt="Dilmuss"></a>
+
+      <div class="nav-title">Savdo</div>
+      <nav class="nav">
+        <a href="#umumiy" data-title="Umumiy ko'rinish" data-sub="Savdo, filiallar va sotuvchilar — bir qarashda"><i>▦</i>Umumiy</a>
+        <a href="#filiallar" data-title="Filiallar" data-sub="Qaysi filialda qancha sotildi"><i>⌂</i>Filiallar</a>
+        <a href="#sotuvchilar" data-title="Sotuvchilar" data-sub="Qaysi admin qancha sotdi — reyting"><i>☺</i>Sotuvchilar</a>
+        <a href="#ballar" data-title="Ballar va mukofotlar" data-sub="Sotuvchilar oylik musobaqasi: ball, daraja, nominatsiya va taqdirlash"><i>★</i>Ballar va mukofotlar</a>
+        <a href="#mahsulotlar" data-title="Mahsulotlar" data-sub="Nima ko'p sotilyapti"><i>▤</i>Mahsulotlar</a>
+        <a href="#savdolar" data-title="Savdolar ro'yxati" data-sub="Har bir chek: qachon, qayerda, kim sotdi"><i>☰</i>Savdolar</a>
+      </nav>
+
+      <div class="nav-title">Ma'lumot</div>
+      <nav class="nav">
+        <a href="#yuklash" data-title="Ma'lumot yuklash" data-sub="Kassa (POS) dasturidan Excel / CSV eksport" data-admin><i>⇪</i>Ma'lumot yuklash</a>
+        <a href="#haqida" data-title="Ma'lumot haqida" data-sub="Raqamlar qayerdan va qanday hisoblanadi"><i>?</i>Ma'lumot haqida</a>
+      </nav>
+
+      <div class="side-foot">
+        <span id="userLine"></span><br>
+        Manba: <span id="srcLine"></span><br>
+        <span class="syncTime"></span>
+      </div>
+    </aside>
+    <div class="backdrop" id="backdrop"></div>
+
+    <main class="content">
+      <div class="mobile-bar">
+        <button class="menu-btn" id="menuBtn" aria-label="Menyu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <img class="brand-logo" src="logo.png" alt="Dilmuss">
+      </div>
+
+      <div class="page-head">
+        <div>
+          <h1 id="pageTitle"></h1>
+          <p id="pageSub"></p>
+        </div>
+        <div class="head-actions">
+          <span class="src-badge" id="srcBadge"></span>
+          <span class="role-badge" id="roleBadge"></span>
+          <button class="chip" onclick="Auth.logout()">Chiqish</button>
+          <span class="updated">yangilangan: <span class="syncTime"></span></span>
+          <button class="btn" id="refreshBtn">⟳ Yangilash</button>
+        </div>
+      </div>
+
+      <!-- ===== Filtrlar (barcha savdo sahifalari uchun) ===== -->
+      <div id="filters">
+        <div class="card">
+          <div class="filter-row" id="periodRow">
+            <span class="lbl">Davr:</span>
+            <button class="chip" data-p="all">Butun davr</button>
+            <button class="chip" data-p="today">Bugun</button>
+            <button class="chip" data-p="yesterday">Kecha</button>
+            <button class="chip" data-p="7">7 kun</button>
+            <button class="chip" data-p="30">30 kun</button>
+            <button class="chip" data-p="month">Shu oy</button>
+            <button class="chip" data-p="prevmonth">O'tgan oy</button>
+            <span class="sep">·</span>
+            <input type="date" id="dFrom" aria-label="Boshlanish sanasi">
+            <span class="sep">–</span>
+            <input type="date" id="dTo" aria-label="Tugash sanasi">
+            <button class="chip" id="okBtn">OK</button>
+          </div>
+          <div class="filter-row" style="margin-top:12px">
+            <span class="lbl">Filial:</span>
+            <select id="branchSel" aria-label="Filial"></select>
+            <span class="lbl" style="margin-left:6px">Sotuvchi:</span>
+            <select id="sellerSel" aria-label="Sotuvchi"></select>
+            <button class="chip sm" id="resetBtn">Tozalash</button>
+          </div>
+          <div class="range-text" id="rangeText"></div>
+        </div>
+      </div>
+
+      <!-- ===== UMUMIY ===== -->
+      <section class="page" id="page-umumiy">
+        <div class="kpi-grid" id="kpis"></div>
+
+        <div id="planWrap">
+          <div class="sec-head"><h2>Plan bajarilishi</h2><span id="planHint"></span></div>
+          <div class="kpis" id="planKpis"></div>
+          <div class="card">
+            <div class="progress-row"><span>Plan bajarildi</span><div class="track"><div class="fill" id="pPlan" style="background:var(--orange)"></div></div><b id="pPlanV"></b></div>
+            <div class="progress-row"><span>Oy o'tdi</span><div class="track"><div class="fill" id="pMonth" style="background:#9a9ca4"></div></div><b id="pMonthV"></b></div>
+            <p class="note">Yuqoridagi chiziq quyidagidan uzun bo'lsa — planning oldidamiz.</p>
+          </div>
+        </div>
+
+        <div class="grid-3-1" style="margin-top:14px">
+          <div class="card"><h3 class="ct">Kunlik savdo <span>mln so'm</span></h3><div class="chart-box tall"><canvas id="cDaily"></canvas></div></div>
+          <div class="card"><h3 class="ct">To'lov turlari <span>summa bo'yicha</span></h3><div class="chart-box tall"><canvas id="cPay"></canvas></div></div>
+        </div>
+
+        <div class="grid-3-1" style="margin-top:14px">
+          <div class="card"><h3 class="ct">Top 15 filial <a href="#filiallar" style="font-size:13px;color:var(--orange)">hammasi →</a></h3><div class="chart-box" style="height:420px"><canvas id="cBranch"></canvas></div></div>
+          <div class="card"><h3 class="ct">Top sotuvchilar <a href="#sotuvchilar" style="font-size:13px;color:var(--orange)">hammasi →</a></h3><div id="topSellers"></div></div>
+        </div>
+
+        <div class="grid-2b" style="margin-top:14px">
+          <div class="card"><h3 class="ct">Soatlar bo'yicha <span>qachon ko'p sotiladi · cheklar</span></h3><div class="chart-box"><canvas id="cHours"></canvas></div></div>
+          <div class="card"><h3 class="ct">Kategoriyalar <span>summa ulushi</span></h3><div class="chart-box"><canvas id="cCats"></canvas></div></div>
+        </div>
+      </section>
+
+      <!-- ===== FILIALLAR ===== -->
+      <section class="page" id="page-filiallar" hidden>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Filial</th><th class="num">Savdo, so'm</th><th>Ulush</th><th class="num">Cheklar</th><th class="num">O'rtacha chek</th><th class="num">Dona</th><th>Plan (temp)</th><th class="num">O'tgan davrga</th><th>Eng yaxshi sotuvchi</th></tr></thead>
+              <tbody id="branchBody"></tbody>
+            </table>
+          </div>
+          <p class="note">Qatorni bossangiz — o'sha filial bo'yicha Umumiy sahifa ochiladi. Plan (temp) — tanlangan davrning bugungacha bo'lgan kunlariga to'g'ri keladigan plan ulushi.</p>
+        </div>
+      </section>
+
+      <!-- ===== SOTUVCHILAR ===== -->
+      <section class="page" id="page-sotuvchilar" hidden>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Sotuvchi</th><th>Filial</th><th class="num">Savdo, so'm</th><th class="num">Cheklar</th><th class="num">O'rtacha chek</th><th class="num">Dona</th><th>Plan (temp)</th><th class="num">O'tgan davrga</th></tr></thead>
+              <tbody id="sellerBody"></tbody>
+            </table>
+          </div>
+          <p class="note" id="sellerNote">Qatorni bossangiz — o'sha sotuvchining barcha cheklari ochiladi. Sotuvchi plani = filial plani / filialdagi sotuvchilar soni.</p>
+        </div>
+      </section>
+
+      <!-- ===== BALLAR VA MUKOFOTLAR ===== -->
+      <section class="page" id="page-ballar" hidden>
+        <div class="card">
+          <div class="filter-row">
+            <span class="lbl">Oy:</span>
+            <span id="monthChips" style="display:contents"></span>
+            <span class="sep">·</span>
+            <span class="lbl">Filial:</span>
+            <select id="ptsBranch" aria-label="Filial"></select>
+          </div>
+          <div class="range-text" id="ptsRange"></div>
+        </div>
+
+        <div id="myCard"></div>
+
+        <div class="sec-head"><h2>Oy g'oliblari</h2><span id="ptsStatus"></span></div>
+        <div class="podium" id="podium"></div>
+
+        <div class="sec-head"><h2>Nominatsiyalar</h2><span>har biri alohida mukofot</span></div>
+        <div class="badge-grid" id="nomGrid"></div>
+
+        <div class="sec-head"><h2>Ballar jadvali</h2><span id="ptsCount"></span></div>
+        <div class="card">
+          <div class="table-wrap"><table>
+            <thead><tr><th>#</th><th>Sotuvchi</th><th>Filial</th><th>Daraja</th><th class="num">Ball</th><th class="num">Savdo, so'm</th><th class="num">Cheklar</th><th class="num">Katta chek</th><th class="num">2+ mahsulot</th><th class="num">Plan kunlari</th><th class="num">Plan (temp)</th><th>Nishonlar</th></tr></thead>
+            <tbody id="ptsBody"></tbody>
+          </table></div>
+        </div>
+
+        <div class="sec-head"><h2>Taqdirlash</h2><span>kimga nima beriladi</span></div>
+        <div class="card">
+          <div class="table-wrap"><table>
+            <thead><tr><th>Mukofot</th><th>Sotuvchi</th><th>Filial</th><th>Natija</th><th>Sovg'a</th><th>Holat</th><th></th></tr></thead>
+            <tbody id="awardBody"></tbody>
+          </table></div>
+          <details style="margin-top:14px">
+            <summary>🏬 Filial chempionlari (<span id="bcCount"></span>) — <span id="bcPrize"></span></summary>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Filial</th><th>Sotuvchi</th><th class="num">Ball</th><th>Holat</th><th></th></tr></thead>
+              <tbody id="bcBody"></tbody>
+            </table></div>
+          </details>
+          <p class="note" id="awardNote"></p>
+        </div>
+
+        <div class="grid-2b" style="margin-top:14px">
+          <div class="card">
+            <h3 class="ct">Telegram guruh uchun tabrik <button class="chip sm" id="copyTg">📋 Nusxa olish</button></h3>
+            <textarea class="tg" id="tgText" readonly></textarea>
+          </div>
+          <div class="card">
+            <h3 class="ct">Ball qoidalari</h3>
+            <ul class="rules" id="rulesList"></ul>
+            <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap" id="levelsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== MAHSULOTLAR ===== -->
+      <section class="page" id="page-mahsulotlar" hidden>
+        <div class="grid-3-1">
+          <div class="card">
+            <h3 class="ct">Kategoriyalar</h3>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Kategoriya</th><th class="num">Savdo, so'm</th><th>Ulush</th><th class="num">Dona</th><th class="num">O'rtacha chek</th><th class="num">O'tgan davrga</th></tr></thead>
+              <tbody id="catBody"></tbody>
+            </table></div>
+          </div>
+          <div class="card"><div class="chart-box tall"><canvas id="cCats2"></canvas></div></div>
+        </div>
+        <div class="card" style="margin-top:14px">
+          <h3 class="ct">Top mahsulotlar <span>summa bo'yicha</span></h3>
+          <div class="table-wrap"><table>
+            <thead><tr><th>#</th><th>Mahsulot</th><th>Kategoriya</th><th class="num">Dona</th><th class="num">Savdo, so'm</th><th class="num">Cheklar</th><th>Ko'p sotgan filial</th></tr></thead>
+            <tbody id="prodBody"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ===== SAVDOLAR ===== -->
+      <section class="page" id="page-savdolar" hidden>
+        <div class="card">
+          <div class="toolbar">
+            <input type="search" id="search" placeholder="Qidirish: mahsulot, sotuvchi, filial, to'lov turi…">
+            <button class="chip" id="exportBtn">⬇ Excel (CSV)</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Sana</th><th>Vaqt</th><th>Filial</th><th>Sotuvchi</th><th>Mahsulot</th><th>Kategoriya</th><th class="num">Soni</th><th class="num">Summa</th><th>To'lov</th></tr></thead>
+            <tbody id="salesBody"></tbody>
+          </table></div>
+          <div class="pager">
+            <span id="pageInfo"></span>
+            <button class="chip sm" id="prevPg">←</button>
+            <button class="chip sm" id="nextPg">→</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== YUKLASH ===== -->
+      <section class="page" id="page-yuklash" hidden>
+        <div class="card">
+          <h3 class="ct">1. Kassa dasturidan savdolarni eksport qiling</h3>
+          <p class="note" style="margin-top:0">Billz, Smartup, 1C va boshqa kassa (POS) dasturlarida odatda <b>Hisobotlar → Savdolar → Excelga eksport</b> bor. Har bir qator — bitta savdo (chek yoki mahsulot) bo'lsin.
+          Kerakli ustunlar: <code>Sana</code> <code>Filial</code> <code>Sotuvchi</code> <code>Summa</code>; qo'shimcha: <code>Vaqt</code> <code>Mahsulot</code> <code>Kategoriya</code> <code>Soni</code> <code>Narx</code> <code>To'lov turi</code>. Rus tilidagi nomlar ham tushuniladi (Дата, Магазин, Продавец, Сумма…).</p>
+          <button class="chip sm" id="tplBtn" style="margin-top:12px">⬇ Namuna fayl (CSV)</button>
+        </div>
+        <div class="card">
+          <h3 class="ct">2. Faylni shu yerga yuklang</h3>
+          <label class="drop" id="drop">
+            <input type="file" id="fileIn" accept=".xlsx,.xls,.csv" hidden>
+            <div style="font-size:30px">⇪</div>
+            <div><b>Faylni bu yerga tashlang</b> yoki bosib tanlang</div>
+            <div style="font-size:13px;margin-top:6px">.xlsx, .xls, .csv</div>
+          </label>
+          <div id="importResult" style="margin-top:14px"></div>
+        </div>
+        <div class="card">
+          <h3 class="ct">Hozirgi manba</h3>
+          <p id="curSource" class="mode-desc"></p>
+          <button class="chip sm" id="demoBtn" style="margin-top:12px">Demo ma'lumotga qaytish</button>
+        </div>
+      </section>
+
+      <!-- ===== HAQIDA ===== -->
+      <section class="page" id="page-haqida" hidden>
+        <div class="card">
+          <h3 class="ct">Ko'rsatkichlar</h3>
+          <div class="table-wrap"><table>
+            <tbody>
+              <tr><td><b>Savdo summasi</b></td><td>Tanlangan davrdagi barcha cheklar summasi (so'm).</td></tr>
+              <tr><td><b>Cheklar</b></td><td>Savdolar (cheklar) soni.</td></tr>
+              <tr><td><b>O'rtacha chek</b></td><td>Savdo summasi / cheklar soni — bitta xaridor o'rtacha qancha pul qoldiradi.</td></tr>
+              <tr><td><b>Dona</b></td><td>Sotilgan mahsulotlar soni.</td></tr>
+              <tr><td><b>Plan (temp)</b></td><td>Oylik plan × (davrdagi bugungacha bo'lgan kunlar / oydagi kunlar). 100% dan yuqori — plandan oldindamiz.</td></tr>
+              <tr><td><b>O'tgan davrga</b></td><td>Shu oy tanlansa — o'tgan oyning aynan shu kunlari bilan; aks holda — undan oldingi teng uzunlikdagi davr bilan solishtiriladi.</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div class="card">
+          <h3 class="ct">Ma'lumot manbai</h3>
+          <p class="mode-desc">Hozir: <b id="srcLine2"></b>. Haqiqiy raqamlar uchun kassa dasturidan Excel eksport qilib, <a href="#yuklash" style="color:var(--orange);font-weight:600">Ma'lumot yuklash</a> sahifasiga yuklang.
+          Yuklangan ma'lumot faqat shu brauzerda saqlanadi. Keyingi bosqich — kassa dasturining API si orqali avtomatik yangilanish.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="tip" id="tip"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const USER = Auth.user();
+    const IS_ADMIN = USER.role === "admin";
+    const C1 = BRAND.color;
+    const PALETTE = [C1, "#16171c", "#f59e0b", "#2f6fed", "#e11d48", "#8b5cf6", "#64748b", "#33cccc"];
+
+    $("roleBadge").textContent = IS_ADMIN ? "Direktor" : "Sotuvchi";
+    $("userLine").textContent = USER.name;
+    if (!IS_ADMIN) document.querySelectorAll("[data-admin]").forEach((a) => a.remove());
+
+    // ---------- Ma'lumot ----------
+    let ROWS, SOURCE, TODAY;
+    function loadData() {
+      const saved = Store.load() || window.__sessionRows || null;
+      if (saved && saved.rows?.length) {
+        ROWS = saved.rows;
+        SOURCE = `Import: ${saved.file} (${fmtNum(saved.rows.length)} qator)`;
+        TODAY = parseKey(ROWS[ROWS.length - 1].date); // import qilingan ma'lumotning oxirgi kuni
+        const real = startOfDay(new Date());
+        if (TODAY > real) TODAY = real;
+      } else {
+        TODAY = startOfDay(new Date());
+        ROWS = buildDemo(TODAY);
+        SOURCE = "Demo ma'lumot";
+      }
+      $("srcLine").textContent = SOURCE;
+      $("srcLine2").textContent = SOURCE;
+      $("srcBadge").textContent = saved && saved.rows?.length ? "Haqiqiy ma'lumot" : "Demo";
+      $("curSource").textContent = SOURCE;
+      // filial / sotuvchi ro'yxatlari ma'lumotning o'zidan olinadi
+      const sellerBranch = new Map();
+      const cnt = new Map();
+      for (const r of ROWS) {
+        const k = r.seller + "|" + r.branch;
+        cnt.set(k, (cnt.get(k) || 0) + 1);
+      }
+      for (const [k, n] of cnt) {
+        const [s, b] = k.split("|");
+        if (!sellerBranch.has(s) || sellerBranch.get(s).n < n) sellerBranch.set(s, { b, n });
+      }
+      window.SELLER_BRANCH = new Map([...sellerBranch].map(([s, v]) => [s, v.b]));
+      window.BRANCH_LIST = [...new Set(ROWS.map((r) => r.branch))].sort();
+    }
+
+    // Planlar (config dan)
+    const planOfBranch = (b) => BRANCHES.find((x) => x.name === b)?.plan || 0;
+    function planOfSeller(s) {
+      const b = BRANCHES.find((x) => x.sellers.includes(s));
+      return b ? b.plan / b.sellers.length : 0;
+    }
+    // Davr uchun plan: har bir kun uchun oylik plan / oydagi kunlar (bugungacha)
+    function periodPlan(monthly, from, to) {
+      if (!monthly) return 0;
+      let sum = 0;
+      const end = to > TODAY ? TODAY : to;
+      for (let d = from; d <= end; d = addDays(d, 1)) sum += monthly / daysIn(d.getFullYear(), d.getMonth());
+      return sum;
+    }
+
+    // ---------- Holat ----------
+    const state = { preset: "month", from: null, to: null, branch: "", seller: IS_ADMIN ? "" : USER.name, page: 0, q: "" };
+
+    function presetRange(p) {
+      const t = TODAY, y = t.getFullYear(), m = t.getMonth();
+      switch (p) {
+        case "all": return [parseKey(ROWS[0].date), t];
+        case "today": return [t, t];
+        case "yesterday": return [addDays(t, -1), addDays(t, -1)];
+        case "7": return [addDays(t, -6), t];
+        case "30": return [addDays(t, -29), t];
+        case "month": return [new Date(y, m, 1), t];
+        case "prevmonth": return [new Date(y, m - 1, 1), new Date(y, m, 0)];
+      }
+    }
+    function prevRange(from, to) {
+      if (from.getDate() === 1 && from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear()) {
+        const pm = new Date(from.getFullYear(), from.getMonth() - 1, 1);
+        return { from: pm, to: new Date(pm.getFullYear(), pm.getMonth(), Math.min(to.getDate(), daysIn(pm.getFullYear(), pm.getMonth()))) };
+      }
+      const len = diffDays(from, to) + 1;
+      return { from: addDays(from, -len), to: addDays(from, -1) };
+    }
+
+    function filterRows(from, to, opts = {}) {
+      const fk = dkey(from), tk = dkey(to);
+      const branch = opts.branch ?? state.branch, seller = opts.seller ?? state.seller;
+      return ROWS.filter((r) => r.date >= fk && r.date <= tk && (!branch || r.branch === branch) && (!seller || r.seller === seller));
+    }
+
+    // ---------- Filtr UI ----------
+    function fillSelects() {
+      const bs = $("branchSel"), ss = $("sellerSel");
+      bs.innerHTML = `<option value="">Barcha filiallar</option>` + BRANCH_LIST.map((b) => `<option>${esc(b)}</option>`).join("");
+      bs.value = state.branch;
+      const sellers = [...SELLER_BRANCH.keys()].filter((s) => !state.branch || SELLER_BRANCH.get(s) === state.branch).sort();
+      ss.innerHTML = `<option value="">Barcha sotuvchilar</option>` + sellers.map((s) => `<option>${esc(s)}</option>`).join("");
+      if (state.seller && !sellers.includes(state.seller) && IS_ADMIN) state.seller = "";
+      if (!IS_ADMIN) ss.innerHTML = `<option>${esc(USER.name)}</option>`;
+      ss.value = state.seller;
+      ss.disabled = !IS_ADMIN;
+    }
+
+    document.querySelectorAll("#periodRow [data-p]").forEach((b) => (b.onclick = () => { setPreset(b.dataset.p); }));
+    $("okBtn").onclick = () => {
+      if (!$("dFrom").value || !$("dTo").value) return;
+      let f = parseKey($("dFrom").value), t = parseKey($("dTo").value);
+      if (f > t) [f, t] = [t, f];
+      state.preset = "custom"; state.from = f; state.to = t; state.page = 0;
+      render();
+    };
+    $("branchSel").onchange = () => { state.branch = $("branchSel").value; state.page = 0; fillSelects(); render(); };
+    $("sellerSel").onchange = () => { state.seller = $("sellerSel").value; state.page = 0; render(); };
+    $("resetBtn").onclick = () => { state.branch = ""; if (IS_ADMIN) state.seller = ""; state.q = ""; $("search").value = ""; fillSelects(); setPreset("month"); };
+    $("refreshBtn").onclick = () => { loadData(); fillSelects(); stampSync(); if (state.preset !== "custom") [state.from, state.to] = presetRange(state.preset); render(); };
+
+    function setPreset(p) {
+      state.preset = p; state.page = 0;
+      [state.from, state.to] = presetRange(p);
+      render();
+    }
+
+    function stampSync() {
+      const n = new Date();
+      document.querySelectorAll(".syncTime").forEach((el) => (el.textContent = `${dfmt(n)} ${pad(n.getHours())}:${pad(n.getMinutes())}`));
+    }
+
+    // ---------- Routing ----------
+    const toggleMenu = (open) => { $("sidebar").classList.toggle("open", open); $("backdrop").classList.toggle("show", open); };
+    $("menuBtn").onclick = () => toggleMenu(true);
+    $("backdrop").onclick = () => toggleMenu(false);
+
+    function currentPage() {
+      let id = (location.hash || "#umumiy").slice(1);
+      if (!$("page-" + id) || (id === "yuklash" && !IS_ADMIN)) id = "umumiy";
+      return id;
+    }
+    function route() {
+      const id = currentPage();
+      document.querySelectorAll(".sidebar .nav a").forEach((a) => {
+        const on = a.getAttribute("href") === "#" + id;
+        a.classList.toggle("active", on);
+        if (on) { $("pageTitle").textContent = a.dataset.title; $("pageSub").textContent = a.dataset.sub; }
+      });
+      document.querySelectorAll(".page").forEach((p) => (p.hidden = p.id !== "page-" + id));
+      $("filters").hidden = ["yuklash", "haqida", "ballar"].includes(id);
+      toggleMenu(false);
+      render();
+      window.scrollTo(0, 0);
+    }
+    window.addEventListener("hashchange", route);
+
+    // ---------- Umumiy yordamchilar ----------
+    const charts = {};
+    Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+    Chart.defaults.color = "#7a7f8e";
+    function chart(id, cfg) {
+      charts[id]?.destroy();
+      charts[id] = new Chart($(id), cfg);
+    }
+    function deltaHtml(cur, prev) {
+      if (!prev) return `<span class="delta"><small>oldingi davr ma'lumoti yo'q</small></span>`;
+      const p = pct(cur, prev);
+      return `<span class="delta ${p >= 0 ? "up" : "down"}">${p >= 0 ? "▲" : "▼"} ${fmtNum(Math.abs(p), 1)}% <small>o'tgan davrga</small></span>`;
+    }
+    function changeCell(cur, prev) {
+      if (!prev) return `<td class="num">—</td>`;
+      const p = pct(cur, prev);
+      return `<td class="num ${p >= 0 ? "pos" : "neg"}"><b>${signed(fmtPct(p), p)}</b></td>`;
+    }
+    function planCell(fact, plan) {
+      if (!plan) return `<td class="plan-cell" style="color:var(--muted)">—</td>`;
+      const p = (fact / plan) * 100;
+      const col = p >= 100 ? "var(--green)" : p >= 85 ? "#f59e0b" : "var(--red)";
+      return `<td class="plan-cell"><span class="plan-track"><i style="width:${Math.min(100, p)}%;background:${col}"></i></span><b style="color:${col}">${fmtNum(p, 0)}%</b></td>`;
+    }
+    const medal = (i) => (i === 0 ? '<span class="medal">🥇</span>' : i === 1 ? '<span class="medal">🥈</span>' : i === 2 ? '<span class="medal">🥉</span>' : `<span class="rank">${i + 1}</span>`);
+    function prevMap(groups) { return new Map(groups.map((g) => [g.name, g])); }
+
+    // ---------- Render ----------
+    function render() {
+      if (!state.from) [state.from, state.to] = presetRange(state.preset);
+      const { from, to } = state;
+      document.querySelectorAll("#periodRow [data-p]").forEach((b) => b.classList.toggle("active", b.dataset.p === state.preset));
+      $("dFrom").value = dkey(from);
+      $("dTo").value = dkey(to);
+      const scope = [state.branch || "Barcha filiallar", state.seller || (IS_ADMIN ? "barcha sotuvchilar" : "")].filter(Boolean).join(" · ");
+      $("rangeText").textContent = `${kfmt(dkey(from))} – ${kfmt(dkey(to))} · ${scope}`;
+
+      const page = currentPage();
+      const pr = prevRange(from, to);
+      const cur = filterRows(from, to);
+      const prev = filterRows(pr.from, pr.to);
+      if (page === "umumiy") renderOverview(cur, prev, from, to);
+      if (page === "filiallar") renderBranches(cur, prev, from, to);
+      if (page === "sotuvchilar") renderSellers(from, to, pr);
+      if (page === "mahsulotlar") renderProducts(cur, prev);
+      if (page === "savdolar") renderSales(cur);
+      if (page === "ballar") renderPoints();
+    }
+
+    // ---------- Ballar va mukofotlar ----------
+    const ymOf = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+    const ymName = (ym) => `${MONTHS[+ym.slice(5) - 1]} ${ym.slice(0, 4)}`;
+    const prevYm = (ym) => ymOf(new Date(+ym.slice(0, 4), +ym.slice(5) - 2, 1));
+    let PTS_MONTH = null, PTS_BRANCH = "";
+
+    // Bir oy uchun har bir sotuvchining ballari
+    function computeMonth(ym, branch) {
+      const y = +ym.slice(0, 4), m = +ym.slice(5) - 1;
+      const start = new Date(y, m, 1), monthEnd = new Date(y, m + 1, 0);
+      const end = monthEnd > TODAY ? TODAY : monthEnd;
+      const dim = daysIn(y, m), elapsed = Math.max(0, diffDays(start, end) + 1);
+      const by = new Map();
+      if (elapsed > 0) for (const r of filterRows(start, end, { branch, seller: "" })) {
+        const s = by.get(r.seller) || { name: r.seller, branch: SELLER_BRANCH.get(r.seller) || r.branch, amount: 0, checks: 0, big: 0, multi: 0, days: new Map() };
+        s.amount += r.amount; s.checks++;
+        if (r.amount >= POINTS.bigCheck.min) s.big++;
+        if (r.qty >= POINTS.multiItem.minQty) s.multi++;
+        s.days.set(r.date, (s.days.get(r.date) || 0) + r.amount);
+        by.set(r.seller, s);
+      }
+      const list = [...by.values()].map((s) => {
+        const plan = planOfSeller(s.name);
+        const daily = plan / dim;
+        let dayHits = 0, streak = 0, run = 0;
+        for (let d = start; d <= end; d = addDays(d, 1)) {
+          const hit = plan > 0 && (s.days.get(dkey(d)) || 0) >= daily;
+          if (hit) { dayHits++; run++; streak = Math.max(streak, run); } else run = 0;
+        }
+        const planPct = plan ? (s.amount / (plan * elapsed / dim)) * 100 : 0;
+        const planBonus = (POINTS.monthPlan.find((p) => planPct >= p.pct) || { pts: 0 }).pts;
+        const parts = {
+          sales: Math.floor((s.amount / 1e6) * POINTS.perMillion),
+          checks: s.checks * POINTS.perCheck,
+          big: s.big * POINTS.bigCheck.pts,
+          multi: s.multi * POINTS.multiItem.pts,
+          days: dayHits * POINTS.dailyPlan,
+          plan: planBonus,
+        };
+        const points = Object.values(parts).reduce((a, b) => a + b, 0);
+        return { ...s, plan, dayHits, streak, planPct, parts, points, growth: 0 };
+      }).sort((a, b) => b.points - a.points);
+      return { list, start, end, finished: TODAY > monthEnd, ym };
+    }
+
+    // Har bir nominatsiya g'olibi
+    function nominees(res, prev) {
+      const prevPts = new Map(prev.list.map((s) => [s.name, s.points]));
+      res.list.forEach((s) => {
+        const p = prevPts.get(s.name);
+        s.growth = p >= 100 ? ((s.points - p) / p) * 100 : 0;
+      });
+      return NOMINATIONS.map((n) => {
+        let best = null;
+        for (const s of res.list) if (n.value(s) >= n.min && (!best || n.value(s) > n.value(best))) best = s;
+        return { ...n, winner: best };
+      });
+    }
+
+    function awardRow(key, award, s, result, prize) {
+      const given = AWARD_STATE[key];
+      return `<tr>
+        <td><b>${award}</b></td><td>${esc(s.name)}</td><td>${esc(s.branch)}</td><td>${result}</td><td>${esc(prize)}</td>
+        <td>${IS_ADMIN
+          ? `<button class="chip sm ${given ? "given" : ""}" data-award="${esc(key)}">${given ? "✓ Berildi " + kfmt(given) : "Berilmagan"}</button>`
+          : given ? `<span class="ok-msg">✓ Berildi</span>` : `<span class="hint-i">kutilmoqda</span>`}</td>
+        <td><button class="chip sm" data-cert="${esc(JSON.stringify({ name: s.name, branch: s.branch, award, result }))}">🎓 Sertifikat</button></td>
+      </tr>`;
+    }
+
+    let AWARD_STATE = {};
+    function renderPoints() {
+      // oy tugmalari: joriy va oldingi 3 oy
+      const months = [0, 1, 2, 3].map((i) => ymOf(new Date(TODAY.getFullYear(), TODAY.getMonth() - i, 1)))
+        .filter((ym) => ROWS.length && ym >= ROWS[0].date.slice(0, 7));
+      if (!PTS_MONTH || !months.includes(PTS_MONTH)) PTS_MONTH = months[0];
+      $("monthChips").innerHTML = months.map((ym) => `<button class="chip ${ym === PTS_MONTH ? "active" : ""}" data-ym="${ym}">${ymName(ym)}</button>`).join("");
+      document.querySelectorAll("[data-ym]").forEach((b) => (b.onclick = () => { PTS_MONTH = b.dataset.ym; renderPoints(); }));
+      const bs = $("ptsBranch");
+      bs.innerHTML = `<option value="">Butun kompaniya</option>` + BRANCH_LIST.map((b) => `<option>${esc(b)}</option>`).join("");
+      bs.value = PTS_BRANCH;
+      bs.onchange = () => { PTS_BRANCH = bs.value; renderPoints(); };
+
+      const res = computeMonth(PTS_MONTH, PTS_BRANCH);
+      const prev = computeMonth(prevYm(PTS_MONTH), PTS_BRANCH);
+      const noms = nominees(res, prev);
+      AWARD_STATE = AwardStore.all();
+      const L = res.list;
+
+      $("ptsRange").textContent = `${kfmt(dkey(res.start))} – ${kfmt(dkey(res.end))} · ${PTS_BRANCH || "butun kompaniya"} · ${L.length} sotuvchi`;
+      $("ptsStatus").textContent = res.finished ? "oy yakunlangan — natijalar yakuniy" : "oy hali tugamagan — natijalar oraliq, har kuni yangilanadi";
+      $("ptsCount").textContent = `${L.length} sotuvchi · ball kamayish tartibida`;
+
+      // Sotuvchining shaxsiy kartasi
+      if (!IS_ADMIN) {
+        const i = L.findIndex((s) => s.name === USER.name);
+        const me = L[i];
+        if (me) {
+          const lv = levelOf(me.points), nx = nextLevel(me.points);
+          const third = L[2];
+          const gap = i > 2 && third ? third.points - me.points + 1 : 0;
+          const myBadges = noms.filter((n) => n.winner?.name === me.name);
+          const prog = nx ? ((me.points - lv.min) / (nx.min - lv.min)) * 100 : 100;
+          $("myCard").innerHTML = `<div class="card my-card">
+            <div>
+              <div class="label" style="color:var(--muted)">Mening ballarim · ${ymName(PTS_MONTH)}</div>
+              <div class="big">${fmtNum(me.points)} <span style="font-size:18px;color:var(--text)">ball</span></div>
+              <div style="margin:6px 0 12px"><span class="lvl" style="background:${lv.color}">${lv.icon} ${lv.name}</span>
+                <b style="margin-left:8px">${i + 1}-o'rin</b> <span class="hint-i">/ ${L.length}</span></div>
+              <div class="progress-row" style="grid-template-columns:1fr 70px;margin:0"><div class="track" style="height:12px"><div class="fill" style="width:${prog}%;background:var(--orange)"></div></div><b>${fmtNum(prog, 0)}%</b></div>
+              <p class="note" style="margin-top:6px">${nx ? `${nx.icon} ${nx.name} darajasigacha yana <b>${fmtNum(nx.min - me.points)}</b> ball` : "Eng yuqori daraja! 💠"}
+              ${gap > 0 ? `<br>🏆 3-o'ringa chiqish uchun yana <b>${fmtNum(gap)}</b> ball kerak` : i <= 2 ? `<br>🏆 Siz hozir g'oliblar qatoridasiz — ${PLACE_PRIZES[i]}!` : ""}</p>
+              ${myBadges.length ? `<p style="margin-top:8px">${myBadges.map((n) => `<b>${n.icon} ${n.title}</b>`).join(" · ")}</p>` : ""}
+            </div>
+            <div class="breakdown">
+              <span>Savdo (${fmtMln(me.amount)} mln × ${POINTS.perMillion})</span><b>${fmtNum(me.parts.sales)}</b>
+              <span>Cheklar (${me.checks} ta)</span><b>${fmtNum(me.parts.checks)}</b>
+              <span>Katta cheklar (${me.big} ta)</span><b>${fmtNum(me.parts.big)}</b>
+              <span>2+ mahsulotli cheklar (${me.multi} ta)</span><b>${fmtNum(me.parts.multi)}</b>
+              <span>Kunlik plan bajarilgan kunlar (${me.dayHits})</span><b>${fmtNum(me.parts.days)}</b>
+              <span>Oylik plan bonusi (${fmtNum(me.planPct, 0)}%)</span><b>${fmtNum(me.parts.plan)}</b>
+              <span style="border-top:1px solid var(--border);padding-top:6px"><b>Jami</b></span><b style="border-top:1px solid var(--border);padding-top:6px">${fmtNum(me.points)}</b>
+            </div>
+          </div>`;
+        } else $("myCard").innerHTML = `<div class="card"><p class="mode-desc">Bu oyda hali savdoingiz yo'q.</p></div>`;
+      } else $("myCard").innerHTML = "";
+
+      // Podium (2 - 1 - 3 tartibida)
+      const pod = [1, 0, 2].map((i) => L[i] ? `
+        <div class="card p${i + 1}">
+          <div class="big-medal">${["🥇", "🥈", "🥉"][i]}</div>
+          <div class="who">${esc(L[i].name)}</div>
+          <div class="where">${esc(L[i].branch)}</div>
+          <div class="pts">${fmtNum(L[i].points)} ball</div>
+          <div class="where">${fmtMln(L[i].amount)} mln so'm · ${L[i].checks} chek</div>
+          <div class="prize">🎁 ${PLACE_PRIZES[i]}</div>
+        </div>` : `<div></div>`).join("");
+      $("podium").innerHTML = L.length ? pod : `<div class="card" style="grid-column:1/-1"><p class="note">Bu oyda savdo yo'q.</p></div>`;
+
+      $("nomGrid").innerHTML = noms.map((n) => `<div class="card">
+        <div class="nom-icon">${n.icon}</div><div class="nom-title">${n.title}</div><div class="nom-desc">${n.desc}</div>
+        ${n.winner ? `<div class="nom-who">${esc(n.winner.name)}</div><div class="hint-i" style="font-size:12px">${esc(n.winner.branch)}</div><div class="nom-val">${n.fmt(n.value(n.winner))}</div>`
+          : `<div class="nom-who hint-i">— hali yo'q</div>`}
+        <div class="prize" style="margin-top:8px;display:inline-block;font-size:12px;font-weight:700;background:#fff7e0;color:#9a6b00;padding:3px 9px;border-radius:20px">🎁 ${n.prize}</div>
+      </div>`).join("");
+
+      // Ballar jadvali
+      const badgeOf = new Map();
+      noms.forEach((n) => n.winner && badgeOf.set(n.winner.name, (badgeOf.get(n.winner.name) || "") + `<span title="${n.title}">${n.icon}</span>`));
+      const branchTop = new Map();
+      L.forEach((s) => { if (!branchTop.has(s.branch)) branchTop.set(s.branch, s); });
+      $("ptsBody").innerHTML = L.map((s, i) => {
+        const lv = levelOf(s.points);
+        const bc = branchTop.get(s.branch) === s ? `<span title="Filial chempioni">🏬</span>` : "";
+        return `<tr class="${s.name === (IS_ADMIN ? "" : USER.name) ? "me" : ""}">
+          <td>${medal(i)}</td><td><b>${esc(s.name)}</b></td><td>${esc(s.branch)}</td>
+          <td><span class="lvl" style="background:${lv.color}">${lv.icon} ${lv.name}</span></td>
+          <td class="num"><b style="color:var(--orange)">${fmtNum(s.points)}</b></td>
+          <td class="num">${fmtNum(s.amount)}</td><td class="num">${s.checks}</td><td class="num">${s.big}</td><td class="num">${s.multi}</td>
+          <td class="num">${s.dayHits}</td>
+          ${planCell(s.amount, s.plan * (diffDays(res.start, res.end) + 1) / daysIn(res.start.getFullYear(), res.start.getMonth()))}
+          <td><span class="chips-sm">${(badgeOf.get(s.name) || "") + bc}</span></td>
+        </tr>`;
+      }).join("") || `<tr><td colspan="12" class="note">Bu oyda savdo yo'q.</td></tr>`;
+
+      // Taqdirlash ro'yxati
+      const rows = [];
+      L.slice(0, 3).forEach((s, i) => rows.push(awardRow(`${PTS_MONTH}|place${i + 1}|${s.name}`, `${["🥇", "🥈", "🥉"][i]} ${i + 1}-o'rin`, s, `${fmtNum(s.points)} ball`, PLACE_PRIZES[i])));
+      noms.forEach((n) => n.winner && rows.push(awardRow(`${PTS_MONTH}|${n.id}|${n.winner.name}`, `${n.icon} ${n.title}`, n.winner, n.fmt(n.value(n.winner)), n.prize)));
+      $("awardBody").innerHTML = rows.join("") || `<tr><td colspan="7" class="note">Hali g'oliblar yo'q.</td></tr>`;
+
+      const champs = [...branchTop.values()].sort((a, b) => a.branch.localeCompare(b.branch));
+      $("bcCount").textContent = champs.length;
+      $("bcPrize").textContent = BRANCH_CHAMPION_PRIZE;
+      $("bcBody").innerHTML = champs.map((s) => {
+        const key = `${PTS_MONTH}|branch|${s.name}`, given = AWARD_STATE[key];
+        return `<tr><td>${esc(s.branch)}</td><td><b>${esc(s.name)}</b></td><td class="num">${fmtNum(s.points)}</td>
+          <td>${IS_ADMIN ? `<button class="chip sm ${given ? "given" : ""}" data-award="${esc(key)}">${given ? "✓ Berildi" : "Berilmagan"}</button>` : given ? "✓ Berildi" : "kutilmoqda"}</td>
+          <td><button class="chip sm" data-cert="${esc(JSON.stringify({ name: s.name, branch: s.branch, award: "🏬 Filial chempioni", result: fmtNum(s.points) + " ball" }))}">🎓</button></td></tr>`;
+      }).join("");
+
+      const givenCount = Object.keys(AWARD_STATE).filter((k) => k.startsWith(PTS_MONTH + "|")).length;
+      $("awardNote").innerHTML = (res.finished ? "" : "⚠️ Oy hali tugamagan — mukofotlarni oy yakunlangandan keyin bering. ")
+        + (IS_ADMIN ? `Bu oy berilgan mukofotlar: <b>${givenCount}</b>. «Berildi» belgisi hozircha faqat shu brauzerda saqlanadi.` : "");
+
+      document.querySelectorAll("[data-award]").forEach((b) => (b.onclick = () => { AwardStore.toggle(b.dataset.award); renderPoints(); }));
+      document.querySelectorAll("[data-cert]").forEach((b) => (b.onclick = () => openCertificate(JSON.parse(b.dataset.cert))));
+
+      // Telegram uchun tabrik matni
+      const lines = [`🏆 DILMUSS — ${ymName(PTS_MONTH)} ${res.finished ? "oyi g'oliblari" : "oraliq natijalari"}!${PTS_BRANCH ? " (" + PTS_BRANCH + ")" : ""}`, ""];
+      L.slice(0, 3).forEach((s, i) => lines.push(`${["🥇", "🥈", "🥉"][i]} ${s.name} (${s.branch}) — ${fmtNum(s.points)} ball`));
+      lines.push("");
+      noms.forEach((n) => n.winner && lines.push(`${n.icon} ${n.title}: ${n.winner.name} — ${n.fmt(n.value(n.winner))}`));
+      lines.push("", "Barchangizga katta rahmat! Keyingi oyda ham omad! 💪", "Sizning uslubingiz, bizning g'amxo'rligimiz 💕");
+      $("tgText").value = lines.join("\n");
+
+      $("rulesList").innerHTML = [
+        `Har 1 mln so'm savdo — <b>${POINTS.perMillion}</b> ball`,
+        `Har bir chek — <b>${POINTS.perCheck}</b> ball`,
+        `${fmtNum(POINTS.bigCheck.min)} so'mdan katta chek — <b>+${POINTS.bigCheck.pts}</b> ball`,
+        `Bir chekda ${POINTS.multiItem.minQty}+ mahsulot — <b>+${POINTS.multiItem.pts}</b> ball`,
+        `Kunlik plan bajarilgan har bir kun — <b>+${POINTS.dailyPlan}</b> ball`,
+        ...POINTS.monthPlan.map((p) => `Oylik plan ${p.pct}%+ — <b>+${p.pts}</b> ball`),
+      ].map((t) => `<li>${t}</li>`).join("");
+      $("levelsList").innerHTML = LEVELS.map((l) => `<span class="lvl" style="background:${l.color}">${l.icon} ${l.name} · ${fmtNum(l.min)}+</span>`).join("");
+    }
+
+    $("copyTg").onclick = async () => {
+      const t = $("tgText");
+      try { await navigator.clipboard.writeText(t.value); } catch (e) { t.select(); document.execCommand("copy"); }
+      $("copyTg").textContent = "✓ Nusxa olindi";
+      setTimeout(() => ($("copyTg").textContent = "📋 Nusxa olish"), 1500);
+    };
+
+    // Chop etiladigan sertifikat
+    function openCertificate(c) {
+      const w = window.open("", "_blank");
+      if (!w) return alert("Brauzer yangi oynani blokladi — ruxsat bering.");
+      const logo = new URL("logo.png", location.href).href;
+      w.document.write(`<!doctype html><html lang="uz"><head><meta charset="utf-8"><title>Sertifikat — ${esc(c.name)}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+          @page { size: A4 landscape; margin: 0; }
+          body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #f3f3f5; display: grid; place-items: center; min-height: 100vh; }
+          .c { width: 1000px; max-width: calc(100vw - 32px); aspect-ratio: 1.414; background: #fff; border: 14px solid #d86487; outline: 2px solid #d86487; outline-offset: -26px;
+               box-sizing: border-box; padding: 60px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #16171c; }
+          img { height: 54px; } h1 { font-size: 46px; letter-spacing: 8px; margin: 28px 0 6px; color: #d86487; }
+          .s { color: #6b7080; font-size: 18px; } .n { font-size: 40px; font-weight: 800; margin: 26px 0 6px; border-bottom: 2px solid #eee; padding: 0 30px 10px; }
+          .a { font-size: 26px; font-weight: 800; margin-top: 18px; } .r { color: #6b7080; margin-top: 6px; font-size: 17px; }
+          .f { display: flex; justify-content: space-between; width: 100%; margin-top: 50px; color: #6b7080; font-size: 14px; }
+          .f div { border-top: 1px solid #ccc; padding-top: 6px; width: 220px; }
+          button { margin: 16px; padding: 10px 18px; border: 0; border-radius: 8px; background: #d86487; color: #fff; font-weight: 700; cursor: pointer; }
+          @media print { body { background: #fff; } button { display: none; } .c { max-width: none; width: 297mm; height: 210mm; aspect-ratio: auto; } }
+        </style></head><body><div>
+        <div class="c">
+          <img src="${logo}" alt="Dilmuss">
+          <h1>SERTIFIKAT</h1>
+          <div class="s">${ymName(PTS_MONTH)} oyi natijalari bo'yicha</div>
+          <div class="n">${esc(c.name)}</div>
+          <div class="s">${esc(c.branch)} filiali</div>
+          <div class="a">${esc(c.award)}</div>
+          <div class="r">${esc(c.result)}</div>
+          <div class="f"><div>Sana: ${dfmt(new Date())}</div><div>Rahbar imzosi</div></div>
+        </div>
+        <div style="text-align:center"><button onclick="print()">🖨 Chop etish / PDF</button></div>
+      </div></body></html>`);
+      w.document.close();
+    }
+
+    function renderOverview(cur, prev, from, to) {
+      const C = summarize(cur), P = summarize(prev);
+      $("kpis").innerHTML = [
+        ["Savdo summasi", fmtNum(C.amount), C.amount, P.amount, "so'm"],
+        ["Cheklar", fmtNum(C.checks), C.checks, P.checks, "ta savdo"],
+        ["O'rtacha chek", fmtNum(C.avg), C.avg, P.avg, "so'm"],
+        ["Sotilgan dona", fmtNum(C.qty), C.qty, P.qty, "dona"],
+      ].map(([l, v, c, p, u]) => `<div class="card kpi"><div class="label">${l}</div><div class="value">${v}</div>${deltaHtml(c, p)}</div>`).join("");
+
+      // Plan (to sanasi tushgan oy bo'yicha)
+      const monthly = state.seller ? planOfSeller(state.seller) : state.branch ? planOfBranch(state.branch) : BRANCHES.reduce((a, b) => a + b.plan, 0);
+      $("planWrap").hidden = !monthly;
+      if (monthly) {
+        const end = to > TODAY ? TODAY : to;
+        const y = end.getFullYear(), m = end.getMonth();
+        const mStart = new Date(y, m, 1);
+        const dim = daysIn(y, m);
+        const share = (diffDays(mStart, end) + 1) / dim;
+        const fact = summarize(filterRows(mStart, end)).amount;
+        const temp = monthly * share, diff = fact - temp, left = Math.max(0, monthly - fact), done = (fact / monthly) * 100;
+        $("planHint").textContent = `${MONTHS[m]} ${y} · ${state.seller || state.branch || "butun kompaniya"}`;
+        $("planKpis").innerHTML = `
+          <div class="card kpi"><div class="label">Oylik plan</div><div class="value">${fmtNum(monthly)}</div><div class="sub">so'm</div></div>
+          <div class="card kpi"><div class="label">Fakt</div><div class="value">${fmtNum(fact)}</div><div class="sub">plandan ${fmtNum(done, 1)}%</div></div>
+          <div class="card kpi"><div class="label">Temp bo'yicha farq</div><div class="value ${diff < 0 ? "neg" : "pos"}">${signed(fmtNum(diff), diff)}</div><div class="sub">${diff < 0 ? "ORQADAMIZ" : "OLDINDAMIZ"} · temp plan ${fmtNum(temp)}</div></div>
+          <div class="card kpi"><div class="label">Oy oxirigacha yetishmayapti</div><div class="value ${left > 0 ? "neg" : "pos"}">${left > 0 ? "-" + fmtNum(left) : "0"}</div><div class="sub">kuniga ~${fmtNum(left / Math.max(1, dim - (diffDays(mStart, end) + 1)))} so'm kerak</div></div>`;
+        $("pPlan").style.width = Math.min(100, done) + "%";
+        $("pPlanV").textContent = fmtNum(done, 1) + "%";
+        $("pMonth").style.width = share * 100 + "%";
+        $("pMonthV").textContent = fmtNum(share * 100, 1) + "%";
+      }
+
+      // Kunlik savdo
+      const days = [];
+      for (let d = from; d <= to; d = addDays(d, 1)) days.push(dkey(d));
+      const byDay = new Map(days.map((k) => [k, 0]));
+      for (const r of cur) byDay.set(r.date, (byDay.get(r.date) || 0) + r.amount);
+      chart("cDaily", {
+        type: "bar",
+        data: { labels: days.map((k) => k.slice(8, 10) + "." + k.slice(5, 7)), datasets: [{ data: days.map((k) => byDay.get(k) / 1e6), backgroundColor: C1, borderRadius: 3, maxBarThickness: 40 }] },
+        options: {
+          maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => fmtNum(c.raw * 1e6) + " so'm" } } },
+          scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } }, y: { grid: { color: "#eef0f4" }, beginAtZero: true } },
+        },
+      });
+
+      // To'lov turlari
+      const pays = groupBy(cur, "payment");
+      chart("cPay", {
+        type: "doughnut",
+        data: { labels: pays.map((p) => p.name), datasets: [{ data: pays.map((p) => p.amount), backgroundColor: pays.map((p, i) => PAYMENTS.find((x) => x.name === p.name)?.color || PALETTE[i % PALETTE.length]), borderColor: "#fff", borderWidth: 2 }] },
+        options: { maintainAspectRatio: false, cutout: "60%", plugins: { legend: { position: "bottom", labels: { boxWidth: 10, padding: 10 } }, tooltip: { callbacks: { label: (c) => `${c.label}: ${fmtMln(c.raw)} mln (${fmtPct((c.raw / C.amount) * 100)})` } } } },
+      });
+
+      // Filiallar
+      const br = groupBy(cur, "branch").slice(0, 15);
+      chart("cBranch", {
+        type: "bar",
+        data: { labels: br.map((b) => b.name), datasets: [{ data: br.map((b) => b.amount / 1e6), backgroundColor: br.map((b) => (state.branch && b.name !== state.branch ? "#c9ccd6" : C1)), borderRadius: 4, maxBarThickness: 28 }] },
+        options: {
+          indexAxis: "y", maintainAspectRatio: false,
+          onClick: (_, els) => { if (els.length && IS_ADMIN) { state.branch = br[els[0].index].name; fillSelects(); render(); } },
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${fmtNum(c.raw * 1e6)} so'm · ${fmtNum(br[c.dataIndex].checks)} chek` } } },
+          scales: { x: { grid: { color: "#eef0f4" } }, y: { grid: { display: false } } },
+        },
+      });
+
+      // Top sotuvchilar
+      const sl = groupBy(filterRows(from, to, { seller: "" }), "seller").slice(0, 7);
+      const max = sl[0]?.amount || 1;
+      $("topSellers").innerHTML = sl.map((s, i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)${s.name === state.seller ? ";background:var(--orange-soft)" : ""}">
+          <div style="width:28px;text-align:center">${medal(i)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(s.name)}</div>
+            <div style="font-size:12px;color:var(--muted)">${esc(SELLER_BRANCH.get(s.name) || "")} · ${fmtNum(s.checks)} chek</div>
+            <span class="mini-bar" style="width:${(s.amount / max) * 100}%"></span>
+          </div>
+          <div style="font-weight:700;white-space:nowrap">${fmtMln(s.amount)} mln</div>
+        </div>`).join("") || `<p class="note">Bu davrda savdo yo'q.</p>`;
+
+      // Soatlar
+      const hours = Array.from({ length: 13 }, (_, i) => i + 10);
+      const byHour = new Map(hours.map((h) => [h, 0]));
+      for (const r of cur) { const h = +r.time.slice(0, 2); if (r.time) byHour.set(h, (byHour.get(h) || 0) + 1); }
+      const hk = [...byHour.keys()].sort((a, b) => a - b);
+      chart("cHours", {
+        type: "bar",
+        data: { labels: hk.map((h) => pad(h) + ":00"), datasets: [{ data: hk.map((h) => byHour.get(h)), backgroundColor: "#16171c", borderRadius: 3 }] },
+        options: { maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => c.raw + " ta chek" } } }, scales: { x: { grid: { display: false } }, y: { grid: { color: "#eef0f4" }, beginAtZero: true } } },
+      });
+
+      catDoughnut("cCats", cur);
+    }
+
+    function catDoughnut(id, rows) {
+      const cats = groupBy(rows, "category");
+      const total = cats.reduce((a, c) => a + c.amount, 0);
+      chart(id, {
+        type: "doughnut",
+        data: { labels: cats.map((c) => c.name), datasets: [{ data: cats.map((c) => c.amount), backgroundColor: cats.map((_, i) => PALETTE[i % PALETTE.length]), borderColor: "#fff", borderWidth: 2 }] },
+        options: { maintainAspectRatio: false, cutout: "60%", plugins: { legend: { position: "right", labels: { boxWidth: 10 } }, tooltip: { callbacks: { label: (c) => `${c.label}: ${fmtMln(c.raw)} mln (${fmtPct((c.raw / total) * 100)})` } } } },
+      });
+    }
+
+    function renderBranches(cur, prev, from, to) {
+      const g = groupBy(cur, "branch"), pm = prevMap(groupBy(prev, "branch"));
+      const total = g.reduce((a, b) => a + b.amount, 0);
+      $("branchBody").innerHTML = g.map((b, i) => {
+        const top = groupBy(cur.filter((r) => r.branch === b.name), "seller")[0];
+        const sh = total ? (b.amount / total) * 100 : 0;
+        return `<tr class="click" data-b="${esc(b.name)}">
+          <td>${medal(i)}</td><td><b>${esc(b.name)}</b></td>
+          <td class="num"><b>${fmtNum(b.amount)}</b></td>
+          <td><span class="mini-bar" style="width:${sh * 1.5}px"></span>${fmtPct(sh)}</td>
+          <td class="num">${fmtNum(b.checks)}</td><td class="num">${fmtNum(b.avg)}</td><td class="num">${fmtNum(b.qty)}</td>
+          ${planCell(b.amount, periodPlan(planOfBranch(b.name), from, to))}
+          ${changeCell(b.amount, pm.get(b.name)?.amount)}
+          <td>${top ? esc(top.name) + ` <span class="hint-i">· ${fmtMln(top.amount)} mln</span>` : "—"}</td>
+        </tr>`;
+      }).join("") || `<tr><td colspan="10" class="note">Bu davrda savdo yo'q.</td></tr>`;
+      document.querySelectorAll("#branchBody tr.click").forEach((tr) => (tr.onclick = () => {
+        if (!IS_ADMIN) return;
+        state.branch = tr.dataset.b; fillSelects(); location.hash = "#umumiy";
+      }));
+    }
+
+    function renderSellers(from, to, pr) {
+      // Reyting har doim barcha sotuvchilar bo'yicha (filial filtri qo'llanadi)
+      const cur = filterRows(from, to, { seller: "" }), prev = filterRows(pr.from, pr.to, { seller: "" });
+      const g = groupBy(cur, "seller"), pm = prevMap(groupBy(prev, "seller"));
+      $("sellerBody").innerHTML = g.map((s, i) => `
+        <tr class="click ${s.name === (IS_ADMIN ? state.seller : USER.name) ? "me" : ""}" data-s="${esc(s.name)}">
+          <td>${medal(i)}</td><td><b>${esc(s.name)}</b></td><td>${esc(SELLER_BRANCH.get(s.name) || "")}</td>
+          <td class="num"><b>${fmtNum(s.amount)}</b></td><td class="num">${fmtNum(s.checks)}</td><td class="num">${fmtNum(s.avg)}</td><td class="num">${fmtNum(s.qty)}</td>
+          ${planCell(s.amount, periodPlan(planOfSeller(s.name), from, to))}
+          ${changeCell(s.amount, pm.get(s.name)?.amount)}
+        </tr>`).join("") || `<tr><td colspan="9" class="note">Bu davrda savdo yo'q.</td></tr>`;
+      document.querySelectorAll("#sellerBody tr.click").forEach((tr) => (tr.onclick = () => {
+        if (!IS_ADMIN) return;
+        state.seller = tr.dataset.s; fillSelects(); location.hash = "#savdolar";
+      }));
+    }
+
+    function renderProducts(cur, prev) {
+      const cats = groupBy(cur, "category"), pm = prevMap(groupBy(prev, "category"));
+      const total = cats.reduce((a, c) => a + c.amount, 0);
+      $("catBody").innerHTML = cats.map((c) => `<tr><td><b>${esc(c.name)}</b></td><td class="num">${fmtNum(c.amount)}</td>
+        <td><span class="mini-bar" style="width:${(c.amount / total) * 120}px"></span>${fmtPct((c.amount / total) * 100)}</td>
+        <td class="num">${fmtNum(c.qty)}</td><td class="num">${fmtNum(c.avg)}</td>${changeCell(c.amount, pm.get(c.name)?.amount)}</tr>`).join("");
+      catDoughnut("cCats2", cur);
+
+      const m = new Map();
+      for (const r of cur) {
+        const k = r.product + "|" + r.category;
+        const g = m.get(k) || { product: r.product, category: r.category, qty: 0, amount: 0, checks: 0, br: new Map() };
+        g.qty += r.qty; g.amount += r.amount; g.checks++;
+        g.br.set(r.branch, (g.br.get(r.branch) || 0) + r.amount);
+        m.set(k, g);
+      }
+      const top = [...m.values()].sort((a, b) => b.amount - a.amount).slice(0, 20);
+      $("prodBody").innerHTML = top.map((p, i) => {
+        const bb = [...p.br].sort((a, b) => b[1] - a[1])[0];
+        return `<tr><td>${medal(i)}</td><td><b>${esc(p.product)}</b></td><td>${esc(p.category)}</td><td class="num">${fmtNum(p.qty)}</td>
+          <td class="num"><b>${fmtNum(p.amount)}</b></td><td class="num">${fmtNum(p.checks)}</td><td>${bb ? esc(bb[0]) : ""}</td></tr>`;
+      }).join("");
+    }
+
+    let LAST_SALES = [];
+    function renderSales(cur) {
+      const q = state.q.trim().toLowerCase();
+      LAST_SALES = cur.filter((r) => !q || `${r.product} ${r.seller} ${r.branch} ${r.payment} ${r.category}`.toLowerCase().includes(q)).reverse();
+      const per = 50, pages = Math.max(1, Math.ceil(LAST_SALES.length / per));
+      state.page = Math.min(state.page, pages - 1);
+      const slice = LAST_SALES.slice(state.page * per, state.page * per + per);
+      $("salesBody").innerHTML = slice.map((r) => `<tr><td>${kfmt(r.date)}</td><td>${r.time}</td><td>${esc(r.branch)}</td><td>${esc(r.seller)}</td>
+        <td>${esc(r.product)}</td><td>${esc(r.category)}</td><td class="num">${fmtNum(r.qty)}</td><td class="num"><b>${fmtNum(r.amount)}</b></td><td>${esc(r.payment)}</td></tr>`).join("")
+        || `<tr><td colspan="9" class="note">Hech narsa topilmadi.</td></tr>`;
+      const s = summarize(LAST_SALES);
+      $("pageInfo").textContent = `${fmtNum(LAST_SALES.length)} ta savdo · ${fmtNum(s.amount)} so'm · sahifa ${state.page + 1}/${pages}`;
+      $("prevPg").disabled = state.page === 0;
+      $("nextPg").disabled = state.page >= pages - 1;
+    }
+    let qTimer;
+    $("search").oninput = () => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = $("search").value; state.page = 0; render(); }, 200); };
+    $("prevPg").onclick = () => { state.page--; render(); };
+    $("nextPg").onclick = () => { state.page++; render(); };
+
+    function downloadCsv(name, header, rows) {
+      const q = (v) => `"${String(v).replace(/"/g, '""')}"`;
+      const csv = "﻿" + [header, ...rows].map((r) => r.map(q).join(";")).join("\r\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    const CSV_HEADER = ["Sana", "Vaqt", "Filial", "Sotuvchi", "Mahsulot", "Kategoriya", "Soni", "Summa", "To'lov turi"];
+    $("exportBtn").onclick = () => downloadCsv(`dilmuss-savdolar-${dkey(state.from)}_${dkey(state.to)}.csv`, CSV_HEADER,
+      LAST_SALES.map((r) => [kfmt(r.date), r.time, r.branch, r.seller, r.product, r.category, r.qty, r.amount, r.payment]));
+    $("tplBtn").onclick = () => downloadCsv("dilmuss-namuna.csv", CSV_HEADER, [
+      ["12.10.2026", "14:35", "Chilonzor", "Aziza Karimova", "Ko'ylak", "Ayollar kiyimi", 1, 450000, "Karta (Uzcard/Humo)"],
+      ["12.10.2026", "15:02", "Yunusobod", "Sardor Aliyev", "Krossovka", "Oyoq kiyim", 1, 780000, "Naqd"],
+    ]);
+
+    // ---------- Import ----------
+    function loadSheetJs() {
+      return window.XLSX ? Promise.resolve() : new Promise((res, rej) => {
+        const s = document.createElement("script");
+        s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+        s.onload = res; s.onerror = () => rej(new Error("Excel o'qish kutubxonasi yuklanmadi (internetni tekshiring)"));
+        document.head.appendChild(s);
+      });
+    }
+    async function importFile(file) {
+      const out = $("importResult");
+      out.innerHTML = `<p class="mode-desc">O'qilyapti: ${esc(file.name)}…</p>`;
+      try {
+        await loadSheetJs();
+        const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+        const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: "", raw: true });
+        const { rows, map, skipped } = normalizeImport(raw);
+        const labels = { date: "Sana", time: "Vaqt", branch: "Filial", seller: "Sotuvchi", category: "Kategoriya", product: "Mahsulot", qty: "Soni", price: "Narx", amount: "Summa", payment: "To'lov turi" };
+        const mapHtml = Object.entries(labels).map(([k, l]) => map[k]
+          ? `<div>✓ <b>${l}</b> ← «${esc(map[k])}»</div>`
+          : `<div class="miss">— ${l}: topilmadi</div>`).join("");
+        if (!rows.length) {
+          out.innerHTML = `<p class="err-msg">Savdo qatorlari topilmadi. Faylda kamida «Sana» va «Summa» ustunlari bo'lishi kerak.</p><div class="map-list">${mapHtml}</div>`;
+          return;
+        }
+        const saved = Store.save({ file: file.name, rows });
+        out.innerHTML = `<p class="ok-msg">✓ ${fmtNum(rows.length)} ta savdo yuklandi (${kfmt(rows[0].date)} – ${kfmt(rows[rows.length - 1].date)})${skipped ? ` · ${skipped} ta qator o'tkazib yuborildi (sana yoki summa yo'q)` : ""}.</p>
+          ${saved ? "" : `<p class="err-msg">Fayl katta — brauzerda saqlanmadi, faqat shu sessiyada ko'rinadi.</p>`}
+          <div class="map-list">${mapHtml}</div>
+          <button class="btn" style="margin-top:14px" onclick="location.hash='#umumiy'">Dashboardni ko'rish →</button>`;
+        if (!saved) { window.__sessionRows = { file: file.name, rows }; }
+        loadData();
+        state.branch = ""; state.seller = ""; fillSelects(); setPreset("month");
+      } catch (e) {
+        out.innerHTML = `<p class="err-msg">Xatolik: ${esc(e.message)}</p>`;
+      }
+    }
+    $("fileIn").onchange = (e) => e.target.files[0] && importFile(e.target.files[0]);
+    const drop = $("drop");
+    ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+    ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+    drop.addEventListener("drop", (e) => e.dataTransfer.files[0] && importFile(e.dataTransfer.files[0]));
+    $("demoBtn").onclick = () => { Store.clear(); window.__sessionRows = null; loadData(); state.branch = ""; state.seller = IS_ADMIN ? "" : USER.name; fillSelects(); setPreset("month"); $("importResult").innerHTML = ""; };
+
+    // ---------- Start ----------
+    loadData();
+    fillSelects();
+    stampSync();
+    route();
+  </script>
+</body>
+</html>

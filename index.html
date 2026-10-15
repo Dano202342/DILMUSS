@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Dilmuss — kirish</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="dilmuss.css">
+  <script src="app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a href="index.html" class="logo"><img class="brand-logo" src="logo.png" alt="Dilmuss"></a>
+  </header>
+
+  <main class="login-wrap">
+    <form class="login-box" id="loginForm" autocomplete="on">
+      <h1>Savdo dashboard</h1>
+      <p style="color:var(--orange);font-weight:600;margin:-14px 0 22px">Sizning uslubingiz, bizning g'amxo'rligimiz 💕</p>
+      <div class="field">
+        <label for="login">Login</label>
+        <input id="login" name="login" type="text" required autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Parol</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password">
+      </div>
+      <button class="btn btn-block" type="submit">Kirish</button>
+      <div class="error" id="error"></div>
+      <p class="hint">
+        Demo — direktor: <b>direktor</b> / <b>dilmuss2026</b><br>
+        Sotuvchi (faqat o'z savdolari): <b>aziza</b> / <b>1234</b>
+      </p>
+    </form>
+  </main>
+
+  <footer class="footer" id="foot"></footer>
+
+  <script>
+    document.getElementById("foot").textContent = `© ${new Date().getFullYear()} Dilmuss · Savdo dashboard`;
+    if (Auth.isLoggedIn()) location.replace("dashboard.html");
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const ok = Auth.login(document.getElementById("login").value.trim(), document.getElementById("password").value);
+      if (ok) location.href = "dashboard.html";
+      else document.getElementById("error").textContent = "Login yoki parol noto'g'ri";
+    });
+  </script>
+</body>
+</html>

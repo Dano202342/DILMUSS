@@ -1,0 +1,110 @@
+/* Dilmuss brendi: asosiy rang (style.css dagi --orange o'rniga) */
+:root {
+  --orange: #d86487;
+  --orange-dark: #c04d71;
+  --orange-soft: #fbebf0;
+}
+
+.brand-logo { display: block; height: 30px; width: auto; }
+.side-logo .brand-logo { height: 26px; }
+.mobile-bar .brand-logo { height: 20px; }
+
+.filter-row select {
+  height: 42px; border: 1px solid var(--border); background: var(--input); border-radius: 10px;
+  padding: 0 12px; font-family: inherit; font-size: 15px; color: var(--text); max-width: 100%;
+}
+.filter-row select:disabled { opacity: .7; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+.kpi-grid .card { margin: 0; }
+.delta { font-size: 13px; font-weight: 700; }
+.delta.up { color: var(--green); }
+.delta.down { color: var(--red); }
+.delta small { color: var(--muted); font-weight: 500; }
+
+.grid-3-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 14px; }
+.grid-3-1 > .card, .grid-2b > .card { margin: 0; }
+.card h3.ct { font-size: 17px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.card h3.ct span { font-size: 13px; font-weight: 500; color: var(--muted); }
+.chart-box.tall { height: 300px; }
+
+tr.click { cursor: pointer; }
+tr.click:hover td { background: #fafafa; }
+tr.me td { background: var(--orange-soft); }
+.medal { font-size: 18px; }
+.rank { color: var(--muted); font-weight: 700; }
+.mini-bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--orange); vertical-align: middle; margin-right: 8px; }
+.plan-cell { min-width: 150px; }
+.plan-track { display: inline-block; width: 80px; height: 8px; background: var(--input); border-radius: 4px; overflow: hidden; vertical-align: middle; margin-right: 8px; }
+.plan-track i { display: block; height: 100%; }
+
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.toolbar input[type="search"] {
+  flex: 1; min-width: 200px; height: 42px; border: 1px solid var(--border); background: var(--input);
+  border-radius: 10px; padding: 0 12px; font-size: 15px; font-family: inherit;
+}
+.pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 12px; color: var(--muted); font-size: 14px; }
+
+.drop {
+  border: 2px dashed var(--border); border-radius: var(--radius); padding: 36px 16px; text-align: center;
+  color: var(--muted); background: #fcfcfd; transition: .15s;
+}
+.drop.over { border-color: var(--orange); background: var(--orange-soft); }
+.drop b { color: var(--text); }
+.map-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 12px; font-size: 14px; }
+.map-list div { background: var(--input); border-radius: 8px; padding: 8px 10px; }
+.map-list .miss { color: var(--muted); }
+.ok-msg { color: var(--green); font-weight: 600; }
+.err-msg { color: var(--red); font-weight: 600; }
+code { background: var(--input); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+.role-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: var(--orange-soft); color: var(--orange); }
+.src-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; background: #fff4e0; color: #b45309; }
+
+/* ---------- Ballar va mukofotlar ---------- */
+.podium { display: grid; grid-template-columns: 1fr 1.15fr 1fr; gap: 14px; align-items: end; margin-bottom: 14px; }
+.podium .card { margin: 0; text-align: center; position: relative; }
+.podium .p1 { border: 2px solid #d4a017; padding-top: 28px; padding-bottom: 28px; }
+.podium .p2 { border-top: 4px solid #8a94a6; }
+.podium .p3 { border-top: 4px solid #b7794a; }
+.podium .big-medal { font-size: 40px; line-height: 1; }
+.podium .who { font-size: 18px; font-weight: 800; margin-top: 8px; }
+.podium .where { color: var(--muted); font-size: 13px; }
+.podium .pts { font-size: 28px; font-weight: 800; color: var(--orange); margin: 8px 0 2px; font-variant-numeric: tabular-nums; }
+.podium .prize { display: inline-block; margin-top: 8px; font-size: 13px; font-weight: 700; background: #fff7e0; color: #9a6b00; padding: 4px 10px; border-radius: 20px; }
+.badge-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 14px; }
+.badge-grid .card { margin: 0; }
+.nom-icon { font-size: 30px; }
+.nom-title { font-weight: 800; font-size: 16px; margin-top: 6px; }
+.nom-desc { color: var(--muted); font-size: 12px; margin-top: 2px; min-height: 30px; }
+.nom-who { font-weight: 700; margin-top: 10px; }
+.nom-val { color: var(--orange); font-weight: 700; font-size: 14px; }
+.lvl { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #fff; white-space: nowrap; }
+.chips-sm { display: flex; gap: 4px; flex-wrap: wrap; }
+.chips-sm span { font-size: 15px; }
+.my-card { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; border: 2px solid var(--orange); }
+.my-card .big { font-size: 40px; font-weight: 800; color: var(--orange); font-variant-numeric: tabular-nums; }
+.breakdown { display: grid; grid-template-columns: 1fr auto; gap: 6px 14px; font-size: 14px; }
+.breakdown b { text-align: right; font-variant-numeric: tabular-nums; }
+.given { background: #e8f7ee; color: var(--green); border-color: #bfe8cf; }
+.rules li { margin: 6px 0 6px 18px; font-size: 15px; }
+textarea.tg { width: 100%; min-height: 190px; border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-family: inherit; font-size: 14px; background: var(--input); resize: vertical; }
+details summary { cursor: pointer; font-weight: 700; margin: 6px 0; }
+
+@media (max-width: 1100px) {
+  .badge-grid { grid-template-columns: repeat(2, 1fr); }
+  .my-card { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .podium { grid-template-columns: 1fr; }
+  .podium .p1 { order: -1; }
+}
+
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .grid-3-1 { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .kpi-grid .kpi .value { font-size: 20px; }
+}
