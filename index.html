@@ -18,7 +18,7 @@
 
   <main class="login-wrap">
     <form class="login-box" id="loginForm" autocomplete="on">
-      <h1>Savdo dashboard</h1>
+      <h1>Savdo hisobot paneli</h1>
       <p style="color:var(--orange);font-weight:600;margin:-14px 0 22px">Sizning uslubingiz, bizning g'amxo'rligimiz 💕</p>
       <div class="field">
         <label for="login">Login</label>
@@ -40,7 +40,7 @@
   <footer class="footer" id="foot"></footer>
 
   <script>
-    document.getElementById("foot").textContent = `© ${new Date().getFullYear()} Dilmuss · Savdo dashboard`;
+    document.getElementById("foot").textContent = `© ${new Date().getFullYear()} Dilmuss · Savdo hisobot paneli`;
     if (Auth.isLoggedIn()) location.replace("dashboard.html");
     document.getElementById("loginForm").addEventListener("submit", (e) => {
       e.preventDefault();

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Dilmuss — Savdo dashboard</title>
+  <title>Dilmuss — Savdo hisobot paneli</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -982,7 +982,7 @@
         out.innerHTML = `<p class="ok-msg">✓ ${fmtNum(rows.length)} ta savdo yuklandi (${kfmt(rows[0].date)} – ${kfmt(rows[rows.length - 1].date)})${skipped ? ` · ${skipped} ta qator o'tkazib yuborildi (sana yoki summa yo'q)` : ""}.</p>
           ${saved ? "" : `<p class="err-msg">Fayl katta — brauzerda saqlanmadi, faqat shu sessiyada ko'rinadi.</p>`}
           <div class="map-list">${mapHtml}</div>
-          <button class="btn" style="margin-top:14px" onclick="location.hash='#umumiy'">Dashboardni ko'rish →</button>`;
+          <button class="btn" style="margin-top:14px" onclick="location.hash='#umumiy'">Hisobot paneliga o'tish →</button>`;
         if (!saved) { window.__sessionRows = { file: file.name, rows }; }
         loadData();
         state.branch = ""; state.seller = ""; fillSelects(); setPreset("month");
